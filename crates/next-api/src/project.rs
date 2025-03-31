@@ -30,7 +30,7 @@ use turbo_tasks::{
     mark_root,
     trace::TraceRawVcs,
     Completion, Completions, FxIndexMap, IntoTraitRef, NonLocalValue, OperationValue, OperationVc,
-    ReadRef, ResolvedVc, State, TaskInput, TransientInstance, TryFlatJoinIterExt, Value, Vc,
+    ReadRef, ResolvedVc, State, TaskInput, TransientInstance, TryFlatJoinIterExt, Vc,
 };
 use turbo_tasks_env::{EnvMap, ProcessEnv};
 use turbo_tasks_fs::{DiskFileSystem, FileSystem, FileSystemPath, VirtualFileSystem};
@@ -1261,10 +1261,10 @@ impl Project {
             get_server_module_options_context(
                 self.project_path(),
                 self.execution_context(),
-                Value::new(ServerContextType::Middleware {
+                ServerContextType::Middleware {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 NextRuntime::Edge,
@@ -1272,10 +1272,10 @@ impl Project {
             ),
             get_edge_resolve_options_context(
                 self.project_path(),
-                Value::new(ServerContextType::Middleware {
+                ServerContextType::Middleware {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 self.execution_context(),
@@ -1316,10 +1316,10 @@ impl Project {
             get_server_module_options_context(
                 self.project_path(),
                 self.execution_context(),
-                Value::new(ServerContextType::Middleware {
+                ServerContextType::Middleware {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 NextRuntime::NodeJs,
@@ -1327,10 +1327,10 @@ impl Project {
             ),
             get_server_resolve_options_context(
                 self.project_path(),
-                Value::new(ServerContextType::Middleware {
+                ServerContextType::Middleware {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 self.execution_context(),
@@ -1352,7 +1352,7 @@ impl Project {
         let module = edge_module_context
             .process(
                 source,
-                Value::new(ReferenceType::Entry(EntryReferenceSubType::Middleware)),
+                ReferenceType::Entry(EntryReferenceSubType::Middleware),
             )
             .module();
 
@@ -1429,10 +1429,10 @@ impl Project {
             get_server_module_options_context(
                 self.project_path(),
                 self.execution_context(),
-                Value::new(ServerContextType::Instrumentation {
+                ServerContextType::Instrumentation {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 NextRuntime::NodeJs,
@@ -1440,10 +1440,10 @@ impl Project {
             ),
             get_server_resolve_options_context(
                 self.project_path(),
-                Value::new(ServerContextType::Instrumentation {
+                ServerContextType::Instrumentation {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 self.execution_context(),
@@ -1484,10 +1484,10 @@ impl Project {
             get_server_module_options_context(
                 self.project_path(),
                 self.execution_context(),
-                Value::new(ServerContextType::Instrumentation {
+                ServerContextType::Instrumentation {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 NextRuntime::Edge,
@@ -1495,10 +1495,10 @@ impl Project {
             ),
             get_edge_resolve_options_context(
                 self.project_path(),
-                Value::new(ServerContextType::Instrumentation {
+                ServerContextType::Instrumentation {
                     app_dir,
                     ecmascript_client_reference_transition_name,
-                }),
+                },
                 self.next_mode(),
                 self.next_config(),
                 self.execution_context(),

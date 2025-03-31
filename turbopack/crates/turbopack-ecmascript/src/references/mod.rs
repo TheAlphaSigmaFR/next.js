@@ -54,7 +54,7 @@ use tracing::Instrument;
 use turbo_rcstr::RcStr;
 use turbo_tasks::{
     trace::TraceRawVcs, FxIndexMap, FxIndexSet, NonLocalValue, ReadRef, ResolvedVc, TaskInput,
-    TryJoinIterExt, Upcast, Value, ValueToString, Vc,
+    TryJoinIterExt, Upcast, ValueToString, Vc,
 };
 use turbo_tasks_fs::{rope::Rope, FileSystemPath};
 use turbopack_core::{
@@ -517,7 +517,7 @@ pub(crate) async fn analyse_ecmascript_module_internal(
     let raw_module = module.await?;
 
     let source = raw_module.source;
-    let ty = Value::new(raw_module.ty);
+    let ty = raw_module.ty;
     let transforms = raw_module.transforms;
     let options = raw_module.options;
     let options = options.await?;
@@ -529,7 +529,7 @@ pub(crate) async fn analyse_ecmascript_module_internal(
     let path = origin.origin_path();
 
     // Is this a typescript file that requires analzying type references?
-    let analyze_types = match &*ty {
+    let analyze_types = match &ty {
         EcmascriptModuleAssetType::Typescript { analyze_types, .. } => *analyze_types,
         EcmascriptModuleAssetType::TypescriptDeclaration => true,
         EcmascriptModuleAssetType::Ecmascript => false,
@@ -748,13 +748,13 @@ pub(crate) async fn analyse_ecmascript_module_internal(
             let mut should_add_evaluation = false;
             let reference = EsmAssetReference::new(
                 origin,
-                Request::parse(Value::new(RcStr::from(&*r.module_path).into()))
+                Request::parse(RcStr::from(&*r.module_path).into())
                     .to_resolved()
                     .await?,
                 r.issue_source
                     .clone()
                     .unwrap_or_else(|| IssueSource::from_source_only(source)),
-                Value::new(r.annotations.clone()),
+                r.annotations.clone(),
                 match options.tree_shaking_mode {
                     Some(TreeShakingMode::ModuleFragments) => match &r.imported_symbol {
                         ImportedSymbol::ModuleEvaluation => {
@@ -925,9 +925,7 @@ pub(crate) async fn analyse_ecmascript_module_internal(
     if let Some((request, webpack_runtime_span)) = webpack_runtime {
         let span = tracing::info_span!("webpack runtime reference");
         async {
-            let request = Request::parse(Value::new(request.into()))
-                .to_resolved()
-                .await?;
+            let request = Request::parse(request.into()).to_resolved().await?;
             let runtime = resolve_as_webpack_runtime(*origin, *request, *transforms)
                 .to_resolved()
                 .await?;
@@ -1391,7 +1389,7 @@ pub(crate) async fn analyse_ecmascript_module_internal(
                                                 r_ref.origin,
                                                 r_ref.request,
                                                 r_ref.issue_source.clone(),
-                                                Value::new(r_ref.annotations.clone()),
+                                                r_ref.annotations.clone(),
                                                 Some(ModulePart::export(export.clone())),
                                                 r_ref.import_externals,
                                             )
@@ -1593,7 +1591,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                         analysis.add_reference_code_gen(
                             UrlAssetReference::new(
                                 origin,
-                                Request::parse(Value::new(pat)).to_resolved().await?,
+                                Request::parse(pat).to_resolved().await?,
                                 *compile_time_info.environment().rendering().await?,
                                 issue_source(source, span),
                                 in_try,
@@ -1627,7 +1625,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                         analysis.add_reference_code_gen(
                             WorkerAssetReference::new(
                                 origin,
-                                Request::parse(Value::new(pat)).to_resolved().await?,
+                                Request::parse(pat).to_resolved().await?,
                                 issue_source(source, span),
                                 in_try,
                             ),
@@ -1724,9 +1722,9 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                 analysis.add_reference_code_gen(
                     EsmAsyncAssetReference::new(
                         origin,
-                        Request::parse(Value::new(pat)).to_resolved().await?,
+                        Request::parse(pat).to_resolved().await?,
                         issue_source(source, span),
-                        Value::new(import_annotations),
+                        import_annotations,
                         in_try,
                         state.import_externals,
                     ),
@@ -1764,7 +1762,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                 analysis.add_reference_code_gen(
                     CjsRequireAssetReference::new(
                         origin,
-                        Request::parse(Value::new(pat)).to_resolved().await?,
+                        Request::parse(pat).to_resolved().await?,
                         issue_source(source, span),
                         in_try,
                     ),
@@ -1816,7 +1814,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                 analysis.add_reference_code_gen(
                     CjsRequireResolveAssetReference::new(
                         origin,
-                        Request::parse(Value::new(pat)).to_resolved().await?,
+                        Request::parse(pat).to_resolved().await?,
                         issue_source(source, span),
                         in_try,
                     ),
@@ -2004,7 +2002,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                         analysis.add_reference(
                             CjsAssetReference::new(
                                 *origin,
-                                Request::parse(Value::new(pat)),
+                                Request::parse(pat),
                                 issue_source(source, span),
                                 in_try,
                             )
@@ -2066,7 +2064,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                 analysis.add_reference(
                     CjsAssetReference::new(
                         *origin,
-                        Request::parse(Value::new(pat)),
+                        Request::parse(pat),
                         issue_source(source, span),
                         in_try,
                     )
@@ -2243,7 +2241,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                                     analysis.add_reference(
                                         CjsAssetReference::new(
                                             *origin,
-                                            Request::parse(Value::new(pat)),
+                                            Request::parse(pat),
                                             issue_source(source, span),
                                             in_try,
                                         )
@@ -2315,7 +2313,7 @@ async fn handle_call<G: Fn(Vec<Effect>) + Send + Sync>(
                 analysis.add_reference(
                     CjsAssetReference::new(
                         *origin,
-                        Request::parse(Value::new(js_value_to_pattern(&args[1]))),
+                        Request::parse(js_value_to_pattern(&args[1])),
                         issue_source(source, span),
                         in_try,
                     )
@@ -2524,7 +2522,7 @@ async fn handle_free_var_reference(
 
         FreeVarReference::Value(value) => {
             analysis.add_code_gen(ConstantValueCodeGen::new(
-                Value::new(value.clone()),
+                value.clone(),
                 ast_path.to_vec().into(),
             ));
         }
@@ -2561,9 +2559,7 @@ async fn handle_free_var_reference(
                         } else {
                             state.origin
                         },
-                        Request::parse(Value::new(request.clone().into()))
-                            .to_resolved()
-                            .await?,
+                        Request::parse(request.clone().into()).to_resolved().await?,
                         IssueSource::from_swc_offsets(
                             state.source,
                             span.lo.to_u32(),
@@ -2962,7 +2958,7 @@ async fn require_resolve_visitor(
 ) -> Result<JsValue> {
     Ok(if args.len() == 1 {
         let pat = js_value_to_pattern(&args[0]);
-        let request = Request::parse(Value::new(pat.clone()));
+        let request = Request::parse(pat.clone());
         let resolved = cjs_resolve_source(origin, request, None, true)
             .resolve()
             .await?;
@@ -3444,14 +3440,14 @@ async fn resolve_as_webpack_runtime(
     request: Vc<Request>,
     transforms: Vc<EcmascriptInputTransforms>,
 ) -> Result<Vc<WebpackRuntime>> {
-    let ty = Value::new(ReferenceType::CommonJs(CommonJsReferenceSubType::Undefined));
+    let ty = ReferenceType::CommonJs(CommonJsReferenceSubType::Undefined);
     let options = origin.resolve_options(ty.clone());
 
     let options = apply_cjs_specific_options(options);
 
     let resolved = resolve(
         origin.origin_path().parent().resolve().await?,
-        Value::new(ReferenceType::CommonJs(CommonJsReferenceSubType::Undefined)),
+        ReferenceType::CommonJs(CommonJsReferenceSubType::Undefined),
         request,
         options,
     );
